@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class UserPage extends StatefulWidget {
-  final User? user;
+  final Member? user;
 
   const UserPage({Key? key, this.user}) : super(key: key);
 
@@ -115,7 +115,7 @@ class _UserPageState extends State<UserPage> {
                 final isValid = formKey.currentState!.validate();
 
                 if (isValid) {
-                  final user = User(
+                  final user = Member(
                     id: widget.user?.id ?? '',
                     name: controllerName.text,
                     age: int.parse(controllerAge.text),
@@ -153,7 +153,7 @@ class _UserPageState extends State<UserPage> {
         border: const OutlineInputBorder(),
       );
 
-  Future createUser(User user) async {
+  Future createUser(Member user) async {
     final docUser = FirebaseFirestore.instance.collection('users').doc();
     user.id = docUser.id;
 
@@ -161,14 +161,14 @@ class _UserPageState extends State<UserPage> {
     await docUser.set(json);
   }
 
-  Future updateUser(User user) async {
+  Future updateUser(Member user) async {
     final docUser = FirebaseFirestore.instance.collection('users').doc(user.id);
 
     final json = user.toJson();
     await docUser.update(json);
   }
 
-  Future deleteUser(User user) async {
+  Future deleteUser(Member user) async {
     /// Reference to document
     final docUser = FirebaseFirestore.instance.collection('users').doc(user.id);
 

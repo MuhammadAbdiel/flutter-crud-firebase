@@ -1,8 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:crud_firebase_5/google_sign_in_provider.dart';
+import 'package:crud_firebase_5/page/sign_up.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:crud_firebase_5/model/user.dart';
 import 'package:crud_firebase_5/page/user_page.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -11,17 +15,24 @@ Future<void> main() async {
   runApp(const MyApp());
 }
 
+final navigatorKey = GlobalKey<NavigatorState>();
+
 class MyApp extends StatelessWidget {
   static const String title = 'Firestore CRUD Write';
 
   const MyApp({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) => const MaterialApp(
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (context) => GoogleSignInProvider(),
+      child: const MaterialApp(
         debugShowCheckedModeBanner: false,
         title: title,
-        home: MainPage(),
-      );
+        home: SignUp(),
+      ),
+    );
+  }
 }
 
 class MainPage extends StatefulWidget {
@@ -38,9 +49,16 @@ class _MainPageState extends State<MainPage> {
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(
           title: const Text('All Users'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.exit_to_app),
+              onPressed: () {
+                FirebaseAuth.instance.signOut();
+              },
+            ),
+          ],
         ),
         body: buildUsers(),
-        // body: buildSingleUser(),
         floatingActionButton: FloatingActionButton(
           child: const Icon(Icons.add),
           onPressed: () {
@@ -51,7 +69,7 @@ class _MainPageState extends State<MainPage> {
         ),
       );
 
-  Widget buildUsers() => StreamBuilder<List<User>>(
+  Widget buildUsers() => StreamBuilder<List<Member>>(
       stream: readUsers(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
@@ -67,7 +85,7 @@ class _MainPageState extends State<MainPage> {
         }
       });
 
-  Widget buildUser(User user) => ListTile(
+  Widget buildUser(Member user) => ListTile(
         leading: CircleAvatar(child: Text('${user.age}')),
         title: Text(user.name),
         subtitle: Text(user.birthday.toIso8601String()),
@@ -94,37 +112,9 @@ class _MainPageState extends State<MainPage> {
         )),
       );
 
-  Stream<List<User>> readUsers() => FirebaseFirestore.instance
+  Stream<List<Member>> readUsers() => FirebaseFirestore.instance
       .collection('users')
       .snapshots()
       .map((snapshot) =>
-          snapshot.docs.map((doc) => User.fromJson(doc.data())).toList());
-
-  // Widget buildSingleUser() => FutureBuilder<User?>(
-  //       future: readUser(),
-  //       builder: (context, snapshot) {
-  //         if (snapshot.hasError) {
-  //           return Text('Something went wrong! ${snapshot.error}');
-  //         } else if (snapshot.hasData) {
-  //           final user = snapshot.data;
-
-  //           return user == null
-  //               ? const Center(child: Text('No User'))
-  //               : buildUser(user);
-  //         } else {
-  //           return const Center(child: CircularProgressIndicator());
-  //         }
-  //       },
-  //     );
-
-  // Future<User?> readUser() async {
-  //   /// Get single document by ID
-  //   final docUser = FirebaseFirestore.instance.collection('users').doc('my-id');
-  //   final snapshot = await docUser.get();
-
-  //   if (snapshot.exists) {
-  //     return User.fromJson(snapshot.data()!);
-  //   }
-  //   return null;
-  // }
+          snapshot.docs.map((doc) => Member.fromJson(doc.data())).toList());
 }
